@@ -24,7 +24,7 @@ pkg_deps=(
   core/glibc
   core/libffi
   core/ncurses
-  core/openssl
+  core/openssl-musl/1.0.2t
   core/readline
   core/sqlite
   core/zlib
