@@ -24,7 +24,7 @@ pkg_deps=(
   core/glibc
   core/libffi
   core/ncurses
-  core/openssl-musl/1.0.2t
+  core/openssl-musl/1.0.2t # https://bugs.python.org/issue31838 <-- Will not build without openssl 1.0.2
   core/readline
   core/sqlite
   core/zlib
