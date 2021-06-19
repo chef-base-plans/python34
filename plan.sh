@@ -1,6 +1,6 @@
 pkg_name=python34
 pkg_distname=Python
-pkg_version=3.4.8
+pkg_version=3.4.10
 pkg_origin=core
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
 pkg_license=('Python-2.0')
@@ -9,7 +9,7 @@ pkg_description="Python is a programming language that lets you work quickly \
 pkg_upstream_url="https://www.python.org"
 pkg_dirname="${pkg_distname}-${pkg_version}"
 pkg_source="https://www.python.org/ftp/python/${pkg_version}/${pkg_dirname}.tgz"
-pkg_shasum="8b1a1ce043e132082d29a5d09f2841f193c77b631282a82f98895a5dbaba1639"
+pkg_shasum="217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d"
 
 pkg_bin_dirs=(bin)
 pkg_lib_dirs=(lib)
@@ -31,6 +31,7 @@ pkg_deps=(
 )
 
 pkg_build_deps=(
+  core/file
   core/coreutils
   core/diffutils
   core/gcc
@@ -39,23 +40,29 @@ pkg_build_deps=(
   core/util-linux
 )
 
+do_setup_environment() {
+  export LDFLAGS="$LDFLAGS -lgcc_s"
+}
+
 do_prepare() {
   sed -i.bak 's/#zlib/zlib/' Modules/Setup.dist
   sed -i -re "/(SSL=|_ssl|-DUSE_SSL|-lssl).*/ s|^#||" Modules/Setup.dist
+
+  if [[ ! -r /usr/bin/file ]]; then
+    ln -sv "$(pkg_path_for file)/bin/file" /usr/bin/file
+    _clean_file=true
+  fi
 }
 
 do_build() {
-  export LDFLAGS="$LDFLAGS -lgcc_s"
-
-  # TODO: We should build with `--enable-optimizations`
   ./configure --prefix="$pkg_prefix" \
               --enable-loadable-sqlite-extensions \
               --enable-shared \
               --with-threads \
               --with-system-expat \
               --with-system-ffi \
-              --with-ensurepip
-
+              --with-ensurepip \
+              --enable-optimizations
   make
 }
 
@@ -83,4 +90,10 @@ do_install() {
 # Disable binary manylinux1(CentOS 5) wheel support
 manylinux1_compatible = False
 EOF
+}
+
+do_end() {
+  if [[ -n "$_clean_file" ]]; then
+    rm -fv /usr/bin/file
+  fi
 }
